@@ -5,6 +5,7 @@ use std::str::FromStr;
 use std::sync::mpsc::Sender;
 
 const MAX_PORT_NUMBER: u16 = 65535;
+pub const HELP_KEY_WORD: &str = "help";
 
 pub struct Arguments {
     flag: String,
@@ -13,29 +14,36 @@ pub struct Arguments {
 }
 
 impl Arguments {
+
+    // TODO: rewrite with bpaf or similar crate...
     pub fn new(args: &[String]) -> Result<Arguments, &'static str> {
+        //check args len
         if args.len() < 2 {
             return Err("Too few arguments! Minimal is one...");
         } else if args.len() > 4 {
             return Err("Too many arguments! Maximum is three...");
         }
 
-        let f = args[1].clone();
-        return if let Ok(ipaddr) = IpAddr::from_str(&f) {
+        let flag = args[1].clone();
+
+        //only addr in args
+        return if let Ok(ipaddr) = IpAddr::from_str(&flag) {
             Ok(Arguments {
                 flag: "".to_string(),
                 ipaddr,
                 threads: 4,
             })
         } else {
-            let flag = args[1].clone();
-            if flag.contains("-h") || flag.contains("--help") && args.len() == 2 {
-                println!("Usage -j too how many threads you want
-                \r\n -h or --help to show this help message...");
-                Err("help")
+            // -h flag
+            if (flag.contains("-h") || flag.contains("--help")) && args.len() == 2 {
+                println!("Usage -j too how many threads you want.
+                \n\r For example: cli_port_sniffer -j 100 127.0.0.1
+                \n\r -h or --help to show this help message...");
+                Err(HELP_KEY_WORD)
             } else if flag.contains("-h") || flag.contains("--help") {
-                Err("Too many arguments! Maximum is three...")
-            } else if flag.contains("-j") {
+                Err("Too many arguments for this flag!")
+            // -j flag
+            } else if flag.contains("-j") && args.len() == 4 {
                 let ipaddr = match IpAddr::from_str(&args[3]) {
                     Ok(addr) => addr,
                     Err(_) => return Err("Not valid ip address! Must be only v4 or v6")
@@ -49,6 +57,9 @@ impl Arguments {
                     ipaddr,
                     threads,
                 })
+            } else if flag.contains("-j") {
+                Err("Too few arguments for this flag!")
+            // exit 0
             } else {
                 Err("Invalid syntax!")
             }

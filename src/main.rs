@@ -2,18 +2,18 @@ mod structs;
 
 use std::{env, process, thread};
 use std::sync::mpsc::channel;
-use crate::structs::Arguments;
+use crate::structs::{Arguments, HELP_KEY_WORD};
 use crate::structs::scan_port;
 
 
 fn main() {
-    println!("Hello, friend!");
+    println!("Hello, friend!\n");
 
     let args: Vec<String> = env::args().collect();
     let program_name = args[0].clone();
     let arguments = Arguments::new(&args)
         .unwrap_or_else(|error| {
-            if error.contains("help") {
+            if error.contains(HELP_KEY_WORD) {
                 process::exit(0);
             } else {
                 eprintln!("{} problem while parsing argiments: {}", program_name, error);
